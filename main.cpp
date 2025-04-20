@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <SFML/Graphics.hpp>
-#include <vector>
+#include <algorithm>
 
 std::vector<double> readIrradianceCSV(const std::string& filename) {
     std::ifstream file(filename);
@@ -26,38 +26,40 @@ std::vector<double> readIrradianceCSV(const std::string& filename) {
 }
 
 void drawGraph(const std::vector<double>& powerOutput) {
-    const int width = 800, height = 600;
-    sf::RenderWindow window(sf::VideoMode(width, height), "Solar Power Output");
-
+    unsigned int width = 800, height = 600;
+    sf::RenderWindow window(sf::VideoMode({width, height}), "Solar Power Output");
+    std::cout << "Window created\n";
     while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event))
-            if (event.type == sf::Event::Closed)
-                window.close();
 
-        window.clear(sf::Color::White);
-
-        double maxPower = *std::max_element(powerOutput.begin(), powerOutput.end());
-
-        for (int i = 0; i < 23; ++i) {
-            float x1 = (i) * (width / 24.0f);
-            float y1 = height - (powerOutput[i] / maxPower) * height * 0.9;
-            float x2 = (i + 1) * (width / 24.0f);
-            float y2 = height - (powerOutput[i + 1] / maxPower) * height * 0.9;
-
-            sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f(x1, y1), sf::Color::Blue),
-                sf::Vertex(sf::Vector2f(x2, y2), sf::Color::Blue)
-            };
-            window.draw(line, 2, sf::Lines);
+      while (const::std::optional event = window.pollEvent()) {
+        if (event->is<sf::Event::Closed>()) {
+          window.close();
         }
+      }
+      
+      window.clear(sf::Color::White);
 
-        window.display();
+      double maxPower = *std::max_element(powerOutput.begin(), powerOutput.end());
+
+      for (int i = 0; i < 23; ++i) {
+        float x1 = (i) * (width / 24.0f);
+        float y1 = height - (powerOutput[i] / maxPower) * height * 0.9;
+        float x2 = (i + 1) * (width / 24.0f);
+        float y2 = height - (powerOutput[i + 1] / maxPower) * height * 0.9;
+
+        sf::Vertex line[] = {
+            sf::Vertex{sf::Vector2f{x1,y1}, sf::Color::Blue},
+            sf::Vertex{sf::Vector2f{x2, y2}, sf::Color::Blue}
+        };
+        window.draw(line, 2, sf::PrimitiveType::Lines);
+      }
+      std::cout << "Running loop\n";
+      window.display();
     }
 }
 
 int main() {
-    std::vector<double> irradiance = readIrradianceCSV("irradiance.csv");
+    std::vector<double> irradiance = readIrradianceCSV("data.csv");
 
     const double panelArea = 1.6;
     const double efficiency = 0.18;
